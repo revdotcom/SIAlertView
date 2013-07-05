@@ -39,7 +39,7 @@ typedef NS_ENUM(NSInteger, SIAlertViewTransitionStyle) {
 
 typedef NS_ENUM(NSInteger, SIAlertViewStyle) {
     SIAlertViewStyleDefault = 0,
-    SIAlertViewStyleTextInput
+    SIAlertViewStylePlainTextInput
 };
 
 @class SIAlertView;
