@@ -1191,11 +1191,6 @@ static SIAlertView *__si_alert_current_view;
     }
 }
 
-+ (CGRect) convertRect:(CGRect)rect toView:(UIView *)view {
-    UIWindow *window = [view isKindOfClass:[UIWindow class]] ? (UIWindow *) view : [view window];
-    return [view convertRect:[window convertRect:rect fromWindow:nil] fromView:nil];
-}
-
 #pragma mark - UIAppearance setters
 
 - (void)setViewBackgroundColor:(UIColor *)viewBackgroundColor
