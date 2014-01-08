@@ -19,6 +19,8 @@ NSString *const SIAlertViewDidDismissNotification = @"SIAlertViewDidDismissNotif
 
 #define MESSAGE_MIN_LINE_COUNT 3
 #define MESSAGE_MAX_LINE_COUNT 5
+#define WEBVIEW_MIN_HEIGHT 0
+#define WEBVIEW_MAX_HEIGHT 200
 #define GAP 10
 #define CANCEL_BUTTON_PADDING_TOP 5
 #define CONTENT_PADDING_LEFT 10
@@ -49,6 +51,7 @@ static SIAlertView *__si_alert_current_view;
 
 @property (nonatomic, strong) UILabel *titleLabel;
 @property (nonatomic, strong) UILabel *messageLabel;
+@property (nonatomic, strong) UIWebView *webView;
 @property (nonatomic, strong) UIView *containerView;
 @property (nonatomic, strong) NSMutableArray *buttons;
 
@@ -228,6 +231,10 @@ static SIAlertView *__si_alert_current_view;
 
 #pragma mark - SIAlert
 
+@interface SIAlertView() <UIWebViewDelegate>
+
+@end
+
 @implementation SIAlertView
 
 + (void)initialize
@@ -260,6 +267,17 @@ static SIAlertView *__si_alert_current_view;
 	if (self) {
 		_title = title;
         _message = message;
+		self.items = [[NSMutableArray alloc] init];
+	}
+	return self;
+}
+
+- (id)initWithTitle:(NSString *)title andHtmlString:(NSString *)htmlString
+{
+	self = [super init];
+	if (self) {
+		_title = title;
+        _htmlString = htmlString;
 		self.items = [[NSMutableArray alloc] init];
 	}
 	return self;
@@ -337,6 +355,12 @@ static SIAlertView *__si_alert_current_view;
 - (void)setMessage:(NSString *)message
 {
 	_message = message;
+    [self invalidateLayout];
+}
+
+- (void)setHtmlString:(NSString *)htmlString
+{
+	_htmlString = htmlString;
     [self invalidateLayout];
 }
 
@@ -732,6 +756,14 @@ static SIAlertView *__si_alert_current_view;
         self.messageLabel.frame = CGRectMake(CONTENT_PADDING_LEFT, y, self.containerView.bounds.size.width - CONTENT_PADDING_LEFT * 2, height);
         y += height;
     }
+    if (self.webView) {
+        if (y > CONTENT_PADDING_TOP) {
+            y += GAP;
+        }
+        CGFloat height = [self heightForWebView];
+        self.webView.frame = CGRectMake(CONTENT_PADDING_LEFT, y, self.containerView.bounds.size.width - CONTENT_PADDING_LEFT * 2, height);
+        y += height;
+    }
     if (self.items.count > 0) {
         if (y > CONTENT_PADDING_TOP) {
             y += GAP;
@@ -770,6 +802,12 @@ static SIAlertView *__si_alert_current_view;
             height += GAP;
         }
         height += [self heightForMessageLabel];
+    }
+    if (self.webView) {
+        if (height > CONTENT_PADDING_TOP) {
+            height += GAP;
+        }
+        height += [self heightForWebView];
     }
     if (self.items.count > 0) {
         if (height > CONTENT_PADDING_TOP) {
@@ -819,6 +857,27 @@ static SIAlertView *__si_alert_current_view;
     return minHeight;
 }
 
+- (CGFloat)heightForWebView
+{
+    CGFloat minHeight = WEBVIEW_MIN_HEIGHT;
+    if (self.webView) {
+        CGFloat maxHeight = WEBVIEW_MAX_HEIGHT;
+        CGRect frame = self.webView.frame;
+        frame.size.height = 1;
+        self.webView.frame = frame;
+        CGSize fittingSize = [self.webView sizeThatFits:CGSizeZero];
+        frame.size = fittingSize;
+        self.webView.frame = frame;
+        
+        if (fittingSize.height < maxHeight) {
+            self.webView.scrollView.scrollEnabled = false;
+        }
+        fittingSize.height = MIN(maxHeight, fittingSize.height);
+        return MAX(minHeight, fittingSize.height);
+    }
+    return minHeight;
+}
+
 #pragma mark - Setup
 
 - (void)setup
@@ -826,6 +885,7 @@ static SIAlertView *__si_alert_current_view;
     [self setupContainerView];
     [self updateTitleLabel];
     [self updateMessageLabel];
+    [self updateWebView];
     [self setupButtons];
     [self invalidateLayout];
 }
@@ -836,6 +896,7 @@ static SIAlertView *__si_alert_current_view;
     self.containerView = nil;
     self.titleLabel = nil;
     self.messageLabel = nil;
+    self.webView = nil;
     [self.buttons removeAllObjects];
     [self.alertWindow removeFromSuperview];
     self.alertWindow = nil;
@@ -904,6 +965,22 @@ static SIAlertView *__si_alert_current_view;
     [self invalidateLayout];
 }
 
+- (void)updateWebView
+{
+    if(self.htmlString) {
+        self.webView = [[UIWebView alloc] initWithFrame:self.bounds];
+        self.webView.backgroundColor = [UIColor clearColor];
+        self.webView.opaque = NO;
+        self.webView.delegate = self;
+        [self.containerView addSubview:self.webView];
+        [self.webView loadHTMLString:self.htmlString baseURL:nil];
+    } else {
+        [self.webView removeFromSuperview];
+        self.webView = nil;
+    }
+    [self invalidateLayout];
+}
+
 - (void)setupButtons
 {
     self.buttons = [[NSMutableArray alloc] initWithCapacity:self.items.count];
@@ -967,6 +1044,12 @@ static SIAlertView *__si_alert_current_view;
 		item.action(self);
 	}
 	[self dismissAnimated:YES];
+}
+
+#pragma mark - UIWebView delegate
+
+- (void)webViewDidFinishLoad:(UIWebView *)webView {
+    [self invalidateLayout];
 }
 
 #pragma mark - CAAnimation delegate
