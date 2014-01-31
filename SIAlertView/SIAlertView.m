@@ -432,12 +432,15 @@ static SIAlertView *__si_alert_current_view;
     [self validateLayout];
     
     [self transitionInCompletion:^{
+        
         if (self.didShowHandler) {
             self.didShowHandler(self);
         }
         [[NSNotificationCenter defaultCenter] postNotificationName:SIAlertViewDidShowNotification object:self userInfo:nil];
         
         [SIAlertView setAnimating:NO];
+        
+        [self.messageLabel flashScrollIndicators];
         
         NSInteger index = [[SIAlertView sharedQueue] indexOfObject:self];
         if (index < [SIAlertView sharedQueue].count - 1) {
