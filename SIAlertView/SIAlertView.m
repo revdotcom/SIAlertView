@@ -17,7 +17,7 @@ NSString *const SIAlertViewDidDismissNotification = @"SIAlertViewDidDismissNotif
 
 #define DEBUG_LAYOUT 0
 
-#define MESSAGE_MIN_LINE_COUNT 3
+#define MESSAGE_MIN_LINE_COUNT 2
 #define MESSAGE_MAX_LINE_COUNT 20
 #define WEBVIEW_MIN_HEIGHT 0
 #define WEBVIEW_MAX_HEIGHT 200
@@ -852,8 +852,15 @@ static SIAlertView *__si_alert_current_view;
     CGFloat minHeight = MESSAGE_MIN_LINE_COUNT * self.messageLabel.font.lineHeight;
     if (self.messageLabel) {
         CGFloat maxHeight = MESSAGE_MAX_LINE_COUNT * self.messageLabel.font.lineHeight;
-        CGSize size = [self.message sizeWithFont:self.messageLabel.font
-                               constrainedToSize:CGSizeMake(CONTAINER_WIDTH - CONTENT_PADDING_LEFT * 2, maxHeight)];
+        CGSize size = [self.messageLabel sizeThatFits:CGSizeMake(CONTAINER_WIDTH - CONTENT_PADDING_LEFT * 2, maxHeight)];
+        
+        if (size.height < maxHeight) {
+            self.messageLabel.userInteractionEnabled = NO;
+        } else {
+            self.messageLabel.userInteractionEnabled = YES;
+        }
+        
+        size.height = MIN(maxHeight, size.height);
         return MAX(minHeight, size.height);
     }
     return minHeight;
@@ -957,6 +964,11 @@ static SIAlertView *__si_alert_current_view;
             if([self.messageLabel respondsToSelector:@selector(setSelectable:)]) {
                 self.messageLabel.selectable = NO;
             }
+//            if ([self.messageLabel respondsToSelector:@selector(setTextContainerInset:)]) {
+//                self.messageLabel.textContainerInset = UIEdgeInsetsZero;
+//            } else {
+//                self.messageLabel.contentInset = UIEdgeInsetsMake(-8,-8,-8,-8);
+//            }
             [self.containerView addSubview:self.messageLabel];
 #if DEBUG_LAYOUT
             self.messageLabel.backgroundColor = [UIColor redColor];
