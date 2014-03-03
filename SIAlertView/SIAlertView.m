@@ -842,7 +842,7 @@ static SIAlertView *__si_alert_current_view;
                                 actualFontSize:nil
                                       forWidth:CONTAINER_WIDTH - CONTENT_PADDING_LEFT * 2
                                  lineBreakMode:self.titleLabel.lineBreakMode];
-        return size.height;
+        return ceilf(size.height);
     }
     return 0;
 }
@@ -853,6 +853,7 @@ static SIAlertView *__si_alert_current_view;
     if (self.messageLabel) {
         CGFloat maxHeight = MESSAGE_MAX_LINE_COUNT * self.messageLabel.font.lineHeight;
         CGSize size = [self.messageLabel sizeThatFits:CGSizeMake(CONTAINER_WIDTH - CONTENT_PADDING_LEFT * 2, maxHeight)];
+        size.height = ceilf(size.height);
         
         if (size.height < maxHeight) {
             self.messageLabel.userInteractionEnabled = NO;
@@ -875,6 +876,7 @@ static SIAlertView *__si_alert_current_view;
         frame.size.height = 1;
         self.webView.frame = frame;
         CGSize fittingSize = [self.webView sizeThatFits:CGSizeZero];
+        fittingSize.height = ceilf(fittingSize.height);
         frame.size = fittingSize;
         self.webView.frame = frame;
         
