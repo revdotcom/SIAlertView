@@ -53,7 +53,7 @@ static SIAlertView *__si_alert_current_view;
 @property (nonatomic, strong) UILabel *titleLabel;
 @property (nonatomic, strong) UITextView *messageLabel;
 @property (nonatomic, strong) UIWebView *webView;
-	@property (nonatomic, strong) UITextField *textField;
+@property (nonatomic, strong) UITextField *textField;
 @property (nonatomic, strong) UIView *containerView;
 @property (nonatomic, strong) NSMutableArray *buttons;
 
@@ -444,6 +444,12 @@ static SIAlertView *__si_alert_current_view;
         self.alertWindow = window;
     }
     [self.alertWindow makeKeyAndVisible];
+    
+    if (self.enableSecondButtonCallback && self.items.count >= 2) {
+        [self.textField addTarget:self action:@selector(textFieldDidChange:) forControlEvents:UIControlEventEditingChanged];
+        UIButton *secondButton = (UIButton *)self.buttons[1];
+        secondButton.enabled = self.enableSecondButtonCallback(self);
+    }
     
     [self validateLayout];
     
@@ -1050,7 +1056,14 @@ static SIAlertView *__si_alert_current_view;
         self.textField = [[UITextField alloc] initWithFrame:self.bounds];
         self.textField.delegate = self;
         self.textField.text = @"";
-        self.textField.borderStyle = UITextBorderStyleBezel;
+        self.textField.contentVerticalAlignment = UIControlContentVerticalAlignmentCenter;
+        self.textField.borderStyle = UITextBorderStyleLine;
+        self.textField.textAlignment = UITextAlignmentLeft;
+        self.textField.clearButtonMode = UITextFieldViewModeWhileEditing;
+        
+        if (self.configureTextFieldCallback)
+            self.configureTextFieldCallback(self, self.textField);
+        
         [self.containerView addSubview:self.textField];
 #if DEBUG_LAYOUT
         self.textField.backgroundColor = [UIColor redColor];
@@ -1147,6 +1160,13 @@ static SIAlertView *__si_alert_current_view;
 - (BOOL)textFieldShouldReturn:(UITextField *)textField {
     [textField resignFirstResponder];
     return YES;
+}
+
+- (void)textFieldDidChange:(UITextField *)sender {
+    if (self.enableSecondButtonCallback && self.items.count >= 2) {
+        UIButton *secondButton = (UIButton *)self.buttons[1];
+        secondButton.enabled = _enableSecondButtonCallback(self);
+    }
 }
 
 #pragma mark - Keyboard notification handlers

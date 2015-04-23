@@ -44,6 +44,9 @@ typedef NS_ENUM(NSInteger, SIAlertViewStyle) {
 
 @class SIAlertView;
 typedef void(^SIAlertViewHandler)(SIAlertView *alertView);
+typedef BOOL(^SIAlertViewEnableSecondButtonCallback)(SIAlertView *);
+typedef void(^SIAlertViewConfigureTextFieldCallback)(SIAlertView *, UITextField *);
+
 
 @interface SIAlertView : UIView
 
@@ -61,6 +64,8 @@ typedef void(^SIAlertViewHandler)(SIAlertView *alertView);
 @property (nonatomic, copy) SIAlertViewHandler didShowHandler;
 @property (nonatomic, copy) SIAlertViewHandler willDismissHandler;
 @property (nonatomic, copy) SIAlertViewHandler didDismissHandler;
+@property (nonatomic, copy) SIAlertViewEnableSecondButtonCallback enableSecondButtonCallback;
+@property (nonatomic, copy) SIAlertViewConfigureTextFieldCallback configureTextFieldCallback;
 
 @property (nonatomic, readonly, getter = isVisible) BOOL visible;
 
